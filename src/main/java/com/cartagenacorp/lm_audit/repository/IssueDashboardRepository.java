@@ -24,14 +24,24 @@ public class IssueDashboardRepository {
         return jdbcTemplate.queryForObject(sql, Long.class, projectId);
     }
 
-    public List<Map<String, Object>> getRecentIssuesByProject(UUID projectId) {
-        String sql = "SELECT id, title, created_at FROM issue WHERE project_id = ? ORDER BY created_at DESC LIMIT 5";
-        return jdbcTemplate.queryForList(sql, projectId);
+    public List<Map<String, Object>> getRecentIssuesByProject(UUID projectId, int limit, int offset) {
+        String sql = "SELECT id, title, created_at FROM issue WHERE project_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        return jdbcTemplate.queryForList(sql, projectId, limit, offset);
     }
 
-    public List<Map<String, Object>> getAssignedIssuesByProject(UUID projectId) {
-        String sql = "SELECT id, title, assigned_id FROM issue WHERE assigned_id IS NOT NULL AND project_id = ?";
-        return jdbcTemplate.queryForList(sql, projectId);
+    public long countRecentIssuesByProject(UUID projectId) {
+        String sql = "SELECT COUNT(*) FROM issue WHERE project_id = ?";
+        return jdbcTemplate.queryForObject(sql, Long.class, projectId);
+    }
+
+    public List<Map<String, Object>> getAssignedIssuesByProject(UUID projectId, int limit, int offset) {
+        String sql = "SELECT id, title, assigned_id FROM issue WHERE assigned_id IS NOT NULL AND project_id = ? LIMIT ? OFFSET ?";
+        return jdbcTemplate.queryForList(sql, projectId, limit, offset);
+    }
+
+    public long countAssignedIssuesByProject(UUID projectId) {
+        String sql = "SELECT COUNT(*) FROM issue WHERE assigned_id IS NOT NULL AND project_id = ?";
+        return jdbcTemplate.queryForObject(sql, Long.class, projectId);
     }
 }
 
