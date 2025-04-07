@@ -17,4 +17,5 @@ public class IssueHistoryDTO {
     private String action;
     private String description;
     private LocalDateTime timestamp;
+    private UUID projectId;
 }

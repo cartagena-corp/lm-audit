@@ -10,5 +10,7 @@ import java.util.UUID;
 @Repository
 public interface IssueHistoryRepository extends JpaRepository<IssueHistory, UUID> {
     List<IssueHistory> findByIssueId(UUID issueId);
+
+    List<IssueHistory> findAllByProjectId(UUID projectId);
 }
 
