@@ -5,6 +5,7 @@ import com.cartagenacorp.lm_audit.dto.PageResponseDTO;
 import com.cartagenacorp.lm_audit.entity.IssueHistory;
 import com.cartagenacorp.lm_audit.service.DashboardService;
 import com.cartagenacorp.lm_audit.service.IssueHistoryService;
+import com.cartagenacorp.lm_audit.util.RequiresPermission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +31,7 @@ public class AuditController {
     }
 
     @GetMapping("/allByProject/{projectId}")
+    @RequiresPermission({"AUDIT_READ"})
     public ResponseEntity<?> getAllHistoryByProject(
             @PathVariable String projectId,
             @PageableDefault(size = 10, sort = "timestamp", direction = Sort.Direction.DESC) Pageable pageable) {
@@ -43,6 +45,7 @@ public class AuditController {
     }
 
     @GetMapping("/allByIssue/{issueId}")
+    @RequiresPermission({"AUDIT_READ"})
     public ResponseEntity<?> getHistoryByIssue(
             @PathVariable String issueId,
             @PageableDefault(size = 10, sort = "timestamp", direction = Sort.Direction.DESC) Pageable pageable) {
@@ -68,6 +71,7 @@ public class AuditController {
     }
 
     @GetMapping("/dashboard/{projectId}")
+    @RequiresPermission({"AUDIT_READ"})
     public ResponseEntity<?> getDashboardByProject(@PathVariable String projectId) {
         try {
             UUID uuid = UUID.fromString(projectId);
@@ -78,6 +82,7 @@ public class AuditController {
     }
 
     @GetMapping("/dashboard/{projectId}/recent")
+    @RequiresPermission({"AUDIT_READ"})
     public ResponseEntity<?> getRecentIssues(
             @PathVariable String projectId,
             @RequestParam(defaultValue = "0") int page,
@@ -91,6 +96,7 @@ public class AuditController {
     }
 
     @GetMapping("/dashboard/{projectId}/assigned")
+    @RequiresPermission({"AUDIT_READ"})
     public ResponseEntity<?> getAssignedIssues(
             @PathVariable String projectId,
             @RequestParam(defaultValue = "0") int page,
