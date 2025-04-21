@@ -1,11 +1,11 @@
 package com.cartagenacorp.lm_audit.service;
 
+import com.cartagenacorp.lm_audit.dto.DashboardResponse;
 import com.cartagenacorp.lm_audit.dto.PageResponseDTO;
 import com.cartagenacorp.lm_audit.repository.IssueDashboardRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -38,11 +38,11 @@ public class DashboardService {
         return new PageResponseDTO<>(content, totalPages, totalElements, size, page);
     }
 
-    public Map<String, Object> getDashboardByProject(UUID projectId) {
-        Map<String, Object> data = new HashMap<>();
-        data.put("openCount", issueDashboardRepository.countOpenIssuesByProject(projectId));
-        data.put("closedCount", issueDashboardRepository.countClosedIssuesByProject(projectId));
+    public DashboardResponse getDashboardByProject(UUID projectId, List<Long> states) {
+        Map<Long, Long> countsByState = issueDashboardRepository.countIssuesByStates(projectId, states);
+        PageResponseDTO<Map<String, Object>> recent = getRecentIssues(projectId, 0, 10);
+        PageResponseDTO<Map<String, Object>> assigned = getAssignedIssues(projectId, 0, 10);
 
-        return data;
+        return new DashboardResponse(countsByState, recent, assigned);
     }
 }
