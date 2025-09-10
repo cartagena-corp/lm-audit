@@ -18,4 +18,5 @@ public class IssueHistoryDTO {
     private String description;
     private LocalDateTime timestamp;
     private UUID projectId;
+    private UserBasicDataDto userBasicDataDto;
 }

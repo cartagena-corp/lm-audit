@@ -3,12 +3,9 @@ package com.cartagenacorp.lm_audit.controller;
 import com.cartagenacorp.lm_audit.dto.DashboardRequest;
 import com.cartagenacorp.lm_audit.dto.IssueHistoryDTO;
 import com.cartagenacorp.lm_audit.dto.PageResponseDTO;
-import com.cartagenacorp.lm_audit.entity.IssueHistory;
 import com.cartagenacorp.lm_audit.service.DashboardService;
 import com.cartagenacorp.lm_audit.service.IssueHistoryService;
 import com.cartagenacorp.lm_audit.util.RequiresPermission;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -24,7 +21,6 @@ public class AuditController {
     private final IssueHistoryService issueHistoryService;
     private final DashboardService dashboardService;
 
-    @Autowired
     public AuditController(IssueHistoryService issueHistoryService, DashboardService dashboardService) {
         this.issueHistoryService = issueHistoryService;
         this.dashboardService = dashboardService;
@@ -32,22 +28,20 @@ public class AuditController {
 
     @GetMapping("/allByProject/{projectId}")
     @RequiresPermission({"AUDIT_READ"})
-    public ResponseEntity<?> getAllHistoryByProject(
+    public ResponseEntity<PageResponseDTO<IssueHistoryDTO>> getAllHistoryByProject(
             @PathVariable String projectId,
             @PageableDefault(size = 10, sort = "timestamp", direction = Sort.Direction.DESC) Pageable pageable) {
         UUID uuid = UUID.fromString(projectId);
-        Page<IssueHistory> history = issueHistoryService.getAllHistoryByProject(uuid, pageable);
-        return ResponseEntity.ok(new PageResponseDTO<>(history));
+        return ResponseEntity.ok(issueHistoryService.getHistoryByProject(uuid, pageable));
     }
 
     @GetMapping("/allByIssue/{issueId}")
     @RequiresPermission({"AUDIT_READ"})
-    public ResponseEntity<?> getHistoryByIssue(
+    public ResponseEntity<PageResponseDTO<IssueHistoryDTO>> getHistoryByIssue(
             @PathVariable String issueId,
             @PageableDefault(size = 10, sort = "timestamp", direction = Sort.Direction.DESC) Pageable pageable) {
         UUID uuid = UUID.fromString(issueId);
-        Page<IssueHistory> history = issueHistoryService.getHistoryByIssue(uuid, pageable);
-        return ResponseEntity.ok(new PageResponseDTO<>(history));
+        return ResponseEntity.ok(issueHistoryService.getHistoryByIssue(uuid, pageable));
     }
 
     @PostMapping("/logChange")

@@ -3,7 +3,6 @@ package com.cartagenacorp.lm_audit.service;
 import com.cartagenacorp.lm_audit.dto.DashboardResponse;
 import com.cartagenacorp.lm_audit.dto.PageResponseDTO;
 import com.cartagenacorp.lm_audit.repository.IssueDashboardRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,7 +14,6 @@ public class DashboardService {
 
     private final IssueDashboardRepository issueDashboardRepository;
 
-    @Autowired
     public DashboardService(IssueDashboardRepository issueDashboardRepository) {
         this.issueDashboardRepository = issueDashboardRepository;
     }

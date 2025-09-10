@@ -17,3 +17,6 @@ app:
     allowed-origins: https://cartagenacorporation.com,https://www.cartagenacorporation.com
   jwt:
     secret: ${JWT_SECRET}
+auth:
+  service:
+    url: http://localhost:8081/api/oauth

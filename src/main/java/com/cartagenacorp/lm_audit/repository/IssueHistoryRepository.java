@@ -12,6 +12,6 @@ import java.util.UUID;
 public interface IssueHistoryRepository extends JpaRepository<IssueHistory, UUID> {
     Page<IssueHistory> findByIssueId(UUID issueId, Pageable pageable);
 
-    Page<IssueHistory> findAllByProjectId(UUID projectId, Pageable pageable);
+    Page<IssueHistory> findByProjectId(UUID projectId, Pageable pageable);
 }
 
