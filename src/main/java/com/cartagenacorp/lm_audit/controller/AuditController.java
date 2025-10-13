@@ -1,10 +1,11 @@
 package com.cartagenacorp.lm_audit.controller;
 
-import com.cartagenacorp.lm_audit.dto.DashboardRequest;
-import com.cartagenacorp.lm_audit.dto.IssueHistoryDTO;
+import com.cartagenacorp.lm_audit.dto.IssueHistoryDtoRequest;
+import com.cartagenacorp.lm_audit.dto.IssueHistoryDtoResponse;
 import com.cartagenacorp.lm_audit.dto.PageResponseDTO;
 import com.cartagenacorp.lm_audit.service.DashboardService;
 import com.cartagenacorp.lm_audit.service.IssueHistoryService;
+import com.cartagenacorp.lm_audit.util.RequiresAuthentication;
 import com.cartagenacorp.lm_audit.util.RequiresPermission;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -28,7 +29,7 @@ public class AuditController {
 
     @GetMapping("/allByProject/{projectId}")
     @RequiresPermission({"AUDIT_READ"})
-    public ResponseEntity<PageResponseDTO<IssueHistoryDTO>> getAllHistoryByProject(
+    public ResponseEntity<PageResponseDTO<IssueHistoryDtoResponse>> getAllHistoryByProject(
             @PathVariable String projectId,
             @PageableDefault(size = 10, sort = "timestamp", direction = Sort.Direction.DESC) Pageable pageable) {
         UUID uuid = UUID.fromString(projectId);
@@ -37,32 +38,40 @@ public class AuditController {
 
     @GetMapping("/allByIssue/{issueId}")
     @RequiresPermission({"AUDIT_READ"})
-    public ResponseEntity<PageResponseDTO<IssueHistoryDTO>> getHistoryByIssue(
+    public ResponseEntity<PageResponseDTO<IssueHistoryDtoResponse>> getHistoryByIssue(
             @PathVariable String issueId,
             @PageableDefault(size = 10, sort = "timestamp", direction = Sort.Direction.DESC) Pageable pageable) {
         UUID uuid = UUID.fromString(issueId);
         return ResponseEntity.ok(issueHistoryService.getHistoryByIssue(uuid, pageable));
     }
 
-    @PostMapping("/logChange")
-    public ResponseEntity<Void> logChange(@RequestBody IssueHistoryDTO issueHistoryDTO) {
-        issueHistoryService.logChange(
-                issueHistoryDTO.getIssueId(),
-                issueHistoryDTO.getUserId(),
-                issueHistoryDTO.getAction(),
-                issueHistoryDTO.getDescription(),
-                issueHistoryDTO.getProjectId()
-        );
+    @PostMapping("/logChange") //se usa desde lm-issues (uso interno)
+    @RequiresAuthentication
+    public ResponseEntity<Void> logChange(@RequestBody IssueHistoryDtoRequest issueHistoryDtoRequest) {
+        issueHistoryService.logChange(issueHistoryDtoRequest);
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/dashboard")
+    @GetMapping("/{projectId}/dashboard")
     @RequiresPermission({"AUDIT_READ"})
-    public ResponseEntity<?> getDashboardByProject(@RequestBody DashboardRequest dashboardRequest) {
-        return ResponseEntity.ok(
-                dashboardService.getDashboardByProject(
-                        dashboardRequest.getProjectId(),
-                        dashboardRequest.getStates())
-        );
+    public ResponseEntity<?> getDashboardByProject(@PathVariable String projectId, @RequestParam(required = false) Long finalStatusId) {
+        UUID uuid = UUID.fromString(projectId);
+        return ResponseEntity.ok(dashboardService.getDashboardByProject(uuid));
+    }
+
+    @GetMapping("/{projectId}/sprint/{sprintId}/dashboard")
+    @RequiresPermission({"AUDIT_READ"})
+    public ResponseEntity<?> getDashboardByProjectAndSprint(@PathVariable String projectId, @PathVariable String sprintId, @RequestParam(required = false) Long finalStatusId) {
+        UUID projectUuid = UUID.fromString(projectId);
+        UUID sprintUuid = UUID.fromString(sprintId);
+        return ResponseEntity.ok(dashboardService.getDashboardBySprint(projectUuid, sprintUuid));
+    }
+
+    @GetMapping("/{projectId}/issue/{issueId}/dashboard")
+    @RequiresPermission({"AUDIT_READ"})
+    public ResponseEntity<?> getDashboardByProjectAndIssue(@PathVariable String projectId, @PathVariable String issueId, @RequestParam(required = false) Long finalStatusId) {
+        UUID projectUuid = UUID.fromString(projectId);
+        UUID issueUuid = UUID.fromString(issueId);
+        return ResponseEntity.ok(dashboardService.getDashboardByIssue(projectUuid, issueUuid));
     }
 }
