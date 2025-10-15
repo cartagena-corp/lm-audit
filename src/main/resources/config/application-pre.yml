@@ -20,3 +20,6 @@ app:
 auth:
   service:
     url: http://localhost:8081/api/oauth
+config:
+  service:
+    url: http://localhost:8088/api/config

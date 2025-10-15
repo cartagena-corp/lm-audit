@@ -55,8 +55,32 @@ public class PermissionAspect {
         } finally {
             JwtContextHolder.clear();
         }
+    }
 
+    @Around("@annotation(RequiresAuthentication)")
+    public Object checkAuthentication(ProceedingJoinPoint joinPoint) throws Throwable {
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
 
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing or invalid Authorization header");
+        }
+
+        String token = authHeader.substring(7);
+
+        if (!jwtTokenUtil.validateToken(token)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired token");
+        }
+
+        UUID userId = jwtTokenUtil.getUserId(token);
+        JwtContextHolder.setUserId(userId);
+        JwtContextHolder.setToken(token);
+
+        try {
+            return joinPoint.proceed();
+        } finally {
+            JwtContextHolder.clear();
+        }
     }
 }
 

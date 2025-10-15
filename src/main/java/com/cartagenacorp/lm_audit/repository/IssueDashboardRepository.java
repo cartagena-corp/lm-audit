@@ -23,13 +23,71 @@ public class IssueDashboardRepository {
         String sql = """
             SELECT status, COUNT(*) as count
             FROM issue
-            WHERE project_id = :projectId AND status IN (:states)
+            WHERE project_id = :projectId AND status IN (:states) AND parent_id IS NULL
             GROUP BY status
         """;
 
         Map<String, Object> params = new HashMap<>();
         params.put("projectId", projectId);
         params.put("states", states);
+
+        List<Map<String, Object>> results = namedParameterJdbcTemplate.queryForList(sql, params);
+
+        Map<Long, Long> countsByState = new HashMap<>();
+        for (Map<String, Object> row : results) {
+            Long status = ((Number) row.get("status")).longValue();
+            Long count = ((Number) row.get("count")).longValue();
+            countsByState.put(status, count);
+        }
+
+        for (Long state : states) {
+            countsByState.putIfAbsent(state, 0L);
+        }
+
+        return countsByState;
+    }
+
+    public Map<Long, Long> countIssuesByStatesInSprint(UUID projectId, List<Long> states, UUID sprintId) {
+        String sql = """
+            SELECT status, COUNT(*) as count
+            FROM issue
+            WHERE project_id = :projectId AND status IN (:states) AND sprint_id = :sprintId AND parent_id IS NULL
+            GROUP BY status
+        """;
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("projectId", projectId);
+        params.put("states", states);
+        params.put("sprintId", sprintId);
+
+        List<Map<String, Object>> results = namedParameterJdbcTemplate.queryForList(sql, params);
+
+        Map<Long, Long> countsByState = new HashMap<>();
+        for (Map<String, Object> row : results) {
+            Long status = ((Number) row.get("status")).longValue();
+            Long count = ((Number) row.get("count")).longValue();
+            countsByState.put(status, count);
+        }
+
+        for (Long state : states) {
+            countsByState.putIfAbsent(state, 0L);
+        }
+
+        return countsByState;
+    }
+
+    public Map<Long, Long> countIssuesByStatesAsSubtaks(UUID projectId, List<Long> states, UUID parentId) {
+        String sql = """
+            SELECT status, COUNT(*) as count
+            FROM issue
+            WHERE project_id = :projectId AND status IN (:states) AND parent_id = :parentId
+            GROUP BY status
+        """;
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("projectId", projectId);
+        params.put("states", states);
+        params.put("parentId", parentId);
 
         List<Map<String, Object>> results = namedParameterJdbcTemplate.queryForList(sql, params);
 

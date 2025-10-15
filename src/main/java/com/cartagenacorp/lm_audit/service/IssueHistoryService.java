@@ -1,6 +1,7 @@
 package com.cartagenacorp.lm_audit.service;
 
-import com.cartagenacorp.lm_audit.dto.IssueHistoryDTO;
+import com.cartagenacorp.lm_audit.dto.IssueHistoryDtoRequest;
+import com.cartagenacorp.lm_audit.dto.IssueHistoryDtoResponse;
 import com.cartagenacorp.lm_audit.dto.PageResponseDTO;
 import com.cartagenacorp.lm_audit.dto.UserBasicDataDto;
 import com.cartagenacorp.lm_audit.entity.IssueHistory;
@@ -35,18 +36,18 @@ public class IssueHistoryService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponseDTO<IssueHistoryDTO> getHistoryByProject(UUID projectId, Pageable pageable) {
+    public PageResponseDTO<IssueHistoryDtoResponse> getHistoryByProject(UUID projectId, Pageable pageable) {
         Page<IssueHistory> historyPage = historyRepository.findByProjectId(projectId, pageable);
         return new PageResponseDTO<>(new PageImpl<>(enrichWithUsers(historyPage), pageable, historyPage.getTotalElements()));
     }
 
     @Transactional(readOnly = true)
-    public PageResponseDTO<IssueHistoryDTO> getHistoryByIssue(UUID issueId, Pageable pageable) {
+    public PageResponseDTO<IssueHistoryDtoResponse> getHistoryByIssue(UUID issueId, Pageable pageable) {
         Page<IssueHistory> historyPage = historyRepository.findByIssueId(issueId, pageable);
         return new PageResponseDTO<>(new PageImpl<>(enrichWithUsers(historyPage), pageable, historyPage.getTotalElements()));
     }
 
-    private List<IssueHistoryDTO> enrichWithUsers(Page<IssueHistory> historyPage) {
+    private List<IssueHistoryDtoResponse> enrichWithUsers(Page<IssueHistory> historyPage) {
         List<UUID> userIds = historyPage.getContent().stream()
                 .map(IssueHistory::getUserId)
                 .filter(Objects::nonNull)
@@ -63,7 +64,7 @@ public class IssueHistoryService {
 
         return historyPage.stream()
                 .map(history -> {
-                    IssueHistoryDTO dto = issueHistoryMapper.toDto(history);
+                    IssueHistoryDtoResponse dto = issueHistoryMapper.toDtoResponse(history);
                     dto.setUserBasicDataDto(
                             userMap.getOrDefault(history.getUserId(),
                                     new UserBasicDataDto(history.getUserId(), null, null, null, null, null, null))
@@ -73,14 +74,17 @@ public class IssueHistoryService {
     }
 
     @Transactional
-    public void logChange(UUID issueId, UUID userId, String action, String description, UUID projectId) {
+    public void logChange(IssueHistoryDtoRequest issueHistoryDtoRequest) {
         IssueHistory history = new IssueHistory();
-        history.setIssueId(issueId);
-        history.setUserId(userId);
-        history.setAction(action);
-        history.setDescription(description);
+        history.setIssueId(issueHistoryDtoRequest.getIssueId());
+        history.setIssueTitle(issueHistoryDtoRequest.getIssueTitle());
+        history.setUserId(issueHistoryDtoRequest.getUserId());
+        history.setAction(issueHistoryDtoRequest.getAction());
+        history.setDescription(issueHistoryDtoRequest.getDescription());
         history.setTimestamp(LocalDateTime.now());
-        history.setProjectId(projectId);
+        history.setProjectId(issueHistoryDtoRequest.getProjectId());
+        history.setBeforeChange(issueHistoryDtoRequest.getBeforeChange());
+        history.setAfterChange(issueHistoryDtoRequest.getAfterChange());
         historyRepository.save(history);
     }
 }
