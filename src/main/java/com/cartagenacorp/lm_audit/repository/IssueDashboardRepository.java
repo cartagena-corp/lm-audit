@@ -105,6 +105,38 @@ public class IssueDashboardRepository {
         return countsByState;
     }
 
+    public Map<Long, Long> countIssuesByStatesAsRelated(UUID projectId, List<Long> states, UUID issueId) {
+        String sql = """
+            SELECT i.status, COUNT(*) as count
+            FROM issue_relation ir
+            JOIN issue i ON ir.target_issue_id = i.id
+            WHERE ir.source_issue_id = :issueId
+              AND i.project_id = :projectId
+              AND i.status IN (:states)
+            GROUP BY i.status
+        """;
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("projectId", projectId);
+        params.put("states", states);
+        params.put("issueId", issueId);
+
+        List<Map<String, Object>> results = namedParameterJdbcTemplate.queryForList(sql, params);
+
+        Map<Long, Long> countsByState = new HashMap<>();
+        for (Map<String, Object> row : results) {
+            Long status = ((Number) row.get("status")).longValue();
+            Long count = ((Number) row.get("count")).longValue();
+            countsByState.put(status, count);
+        }
+
+        for (Long state : states) {
+            countsByState.putIfAbsent(state, 0L);
+        }
+
+        return countsByState;
+    }
+
     public List<Map<String, Object>> getRecentIssuesByProject(UUID projectId, int limit, int offset) {
         String sql = "SELECT id, title, created_at FROM issue WHERE project_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?";
         return jdbcTemplate.queryForList(sql, projectId, limit, offset);
@@ -123,6 +155,26 @@ public class IssueDashboardRepository {
     public long countAssignedIssuesByProject(UUID projectId) {
         String sql = "SELECT COUNT(*) FROM issue WHERE assigned_id IS NOT NULL AND project_id = ?";
         return jdbcTemplate.queryForObject(sql, Long.class, projectId);
+    }
+
+    public List<Map<String, Object>> getRecentIssuesBySprint(UUID projectId, UUID sprintId, int limit, int offset) {
+        String sql = "SELECT id, title, created_at FROM issue WHERE project_id = ? AND sprint_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        return jdbcTemplate.queryForList(sql, projectId, sprintId, limit, offset);
+    }
+
+    public long countRecentIssuesBySprint(UUID projectId, UUID sprintId) {
+        String sql = "SELECT COUNT(*) FROM issue WHERE project_id = ? AND sprint_id = ?";
+        return jdbcTemplate.queryForObject(sql, Long.class, projectId, sprintId);
+    }
+
+    public List<Map<String, Object>> getRecentSubtasksByIssue(UUID projectId, UUID parentId, int limit, int offset) {
+        String sql = "SELECT id, title, created_at FROM issue WHERE project_id = ? AND parent_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        return jdbcTemplate.queryForList(sql, projectId, parentId, limit, offset);
+    }
+
+    public long countRecentSubtasksByIssue(UUID projectId, UUID parentId) {
+        String sql = "SELECT COUNT(*) FROM issue WHERE project_id = ? AND parent_id = ?";
+        return jdbcTemplate.queryForObject(sql, Long.class, projectId, parentId);
     }
 }
 

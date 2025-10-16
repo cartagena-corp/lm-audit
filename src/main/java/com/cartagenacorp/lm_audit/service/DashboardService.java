@@ -40,6 +40,24 @@ public class DashboardService {
         return new PageResponseDTO<>(content, totalPages, totalElements, size, page);
     }
 
+    public PageResponseDTO<Map<String, Object>> getRecentIssuesBySprint(UUID projectId, UUID sprintId, int page, int size) {
+        long totalElements = issueDashboardRepository.countRecentIssuesBySprint(projectId, sprintId);
+        int offset = page * size;
+        List<Map<String, Object>> content = issueDashboardRepository.getRecentIssuesBySprint(projectId, sprintId, size, offset);
+
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        return new PageResponseDTO<>(content, totalPages, totalElements, size, page);
+    }
+
+    public PageResponseDTO<Map<String, Object>> getRecentSubtasksByIssue(UUID projectId, UUID parentId, int page, int size) {
+        long totalElements = issueDashboardRepository.countRecentSubtasksByIssue(projectId, parentId);
+        int offset = page * size;
+        List<Map<String, Object>> content = issueDashboardRepository.getRecentSubtasksByIssue(projectId, parentId, size, offset);
+
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+        return new PageResponseDTO<>(content, totalPages, totalElements, size, page);
+    }
+
 //    public DashboardResponse getDashboardByProject(UUID projectId, Long finalStatusId) {
 //        String token = JwtContextHolder.getToken();
 //
@@ -148,8 +166,9 @@ public class DashboardService {
                 .toList();
 
         Map<Long, Long> countsByState = issueDashboardRepository.countIssuesByStatesInSprint(projectId, stateIds, sprintId);
+        PageResponseDTO<Map<String, Object>> recent = getRecentIssuesBySprint(projectId, sprintId, 0, 10);
 
-        return getDashboardResponse(issueStatuses, countsByState, null, null);
+        return getDashboardResponse(issueStatuses, countsByState, recent, null);
     }
 
     public DashboardResponse getDashboardByIssue(UUID projectId, UUID issueId){
@@ -162,6 +181,21 @@ public class DashboardService {
                 .toList();
 
         Map<Long, Long> countsByState = issueDashboardRepository.countIssuesByStatesAsSubtaks(projectId, stateIds, issueId);
+        PageResponseDTO<Map<String, Object>> recent = getRecentSubtasksByIssue(projectId, issueId, 0, 10);
+
+        return getDashboardResponse(issueStatuses, countsByState, recent, null);
+    }
+
+    public DashboardResponse getDashboardByRelatedIssues(UUID projectId, UUID issueId) {
+        String token = JwtContextHolder.getToken();
+
+        List<NamedIdDTO> issueStatuses = configExternalService.getProjectConfig(token, projectId).getIssueStatuses();
+
+        List<Long> stateIds = issueStatuses.stream()
+                .map(NamedIdDTO::getId)
+                .toList();
+
+        Map<Long, Long> countsByState = issueDashboardRepository.countIssuesByStatesAsRelated(projectId, stateIds, issueId);
 
         return getDashboardResponse(issueStatuses, countsByState, null, null);
     }
