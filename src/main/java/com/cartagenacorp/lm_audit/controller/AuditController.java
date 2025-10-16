@@ -74,4 +74,12 @@ public class AuditController {
         UUID issueUuid = UUID.fromString(issueId);
         return ResponseEntity.ok(dashboardService.getDashboardByIssue(projectUuid, issueUuid));
     }
+
+    @GetMapping("/{projectId}/relatedIssues/{issueId}/dashboard")
+    @RequiresPermission({"AUDIT_READ"})
+    public ResponseEntity<?> getDashboardByProjectAndRelatedIssues(@PathVariable String projectId, @PathVariable String issueId, @RequestParam(required = false) Long finalStatusId) {
+        UUID projectUuid = UUID.fromString(projectId);
+        UUID issueUuid = UUID.fromString(issueId);
+        return ResponseEntity.ok(dashboardService.getDashboardByRelatedIssues(projectUuid, issueUuid));
+    }
 }
